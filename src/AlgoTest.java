@@ -9,7 +9,6 @@ import java.util.Scanner;
 public class AlgoTest {
 
 	static int timeLead[] = new int[5];
-	int assumedBreakPoint = 16; 
 	
 	public static void main(String[] args){
 		AlgoTest obj = new AlgoTest();
@@ -52,7 +51,7 @@ public class AlgoTest {
 			B = paddMatrix(B, requiredLength);
 		}
 		
-		C = strassenForMatrix(A, B, C.length);
+		C = strassenForMatrix(A, B, C.length, -1);//passing -1 as breakpoint for Pure strassen's algorithm
 		System.out.println("\nMatrix multiplication by Strassen's Algorithm:\nTime:"+ (System.nanoTime() - millis) +" ns\n");
 		printMatrix(C);
 		
@@ -77,7 +76,7 @@ public class AlgoTest {
 		return C;
 	}
 	
-	public int[][] strassen(int[][] A, int[][] B, int halfLength){
+	public int[][] strassen(int[][] A, int[][] B, int halfLength, int asumedBreakPoint){
 		int C[][] = new int[A.length][A.length];
 		
 		if(halfLength == 0){
@@ -131,7 +130,7 @@ public class AlgoTest {
 		int P6[][];// = strassen(S7, S8, halfLength/2);
 		int P7[][];// = strassen(S9, S10, halfLength/2);
 		
-		if(A.length <= 32){
+		if(A.length <= asumedBreakPoint){
 			P1 = traditionalMatrixMultiplication(a, S1); 
 			P2 = traditionalMatrixMultiplication(S2, h);
 			P3 = traditionalMatrixMultiplication(S3, e);
@@ -140,13 +139,13 @@ public class AlgoTest {
 			P6 = traditionalMatrixMultiplication(S7, S8);
 			P7 = traditionalMatrixMultiplication(S9, S10);
 		}else{
-			 P1 = strassen(a, S1, halfLength/2);
-			 P2 = strassen(S2, h, halfLength/2);
-			 P3 = strassen(S3, e, halfLength/2);
-			 P4 = strassen(d, S4, halfLength/2);
-			 P5 = strassen(S5, S6, halfLength/2);
-			 P6 = strassen(S7, S8, halfLength/2);
-			 P7 = strassen(S9, S10, halfLength/2);
+			 P1 = strassen(a, S1, halfLength/2, asumedBreakPoint);
+			 P2 = strassen(S2, h, halfLength/2, asumedBreakPoint);
+			 P3 = strassen(S3, e, halfLength/2, asumedBreakPoint);
+			 P4 = strassen(d, S4, halfLength/2, asumedBreakPoint);
+			 P5 = strassen(S5, S6, halfLength/2, asumedBreakPoint);
+			 P6 = strassen(S7, S8, halfLength/2, asumedBreakPoint);
+			 P7 = strassen(S9, S10, halfLength/2, asumedBreakPoint);
 		}
 
 		for(int i = 0; i < P1.length; i++){
@@ -160,10 +159,10 @@ public class AlgoTest {
 		return C;
 	}
 	
-	public int[][] strassenForMatrix(int[][] A, int[][] B, int orignalLength){
+	public int[][] strassenForMatrix(int[][] A, int[][] B, int orignalLength, int assumedBreakPoint){
 		int D[][] = new int[orignalLength][orignalLength];
 		
-		int C[][] = strassen(A, B, A.length/2);
+		int C[][] = strassen(A, B, A.length/2, assumedBreakPoint);
 		for(int i = 0; i < D.length; i++){
 			for(int j = 0; j < D.length; j++){
 				D[i][j] = C[i][j];
@@ -205,26 +204,23 @@ public class AlgoTest {
 	public void printMatrix(int[][] C){
 		for(int i = 0; i < C.length; i++){
 			for(int j = 0; j < C.length; j++){
-				System.out.print(C[i][j]+" ");
+				System.out.print(String.format(" %5d",C[i][j]));
 			}
 			System.out.print("\n");
 		}
 	}
 	
 	public int findBreakPoint(){
-		
-		System.out.println("================================================");
-		System.out.println("           Calculating Breakpoint...             ");
-		System.out.println("================================================");
 
 		Queue<Integer> bpQueue = new LinkedList<Integer>();
-		while(assumedBreakPoint < 1024){
 			int size = 1;
-			boolean found = false;
 			Random rand = new Random();
 			
-			System.out.println("****************************************************\nReadings with Breakpoint: "+assumedBreakPoint+"\n****************************************************");
-			while(size < 2048){
+			String header = String.format("%16s", "N") + String.format("%13s", "Trad") + String.format("%13s", "16") + String.format("%13s", "32") + String.format("%13s", "64")+String.format("%13s", "128")+String.format("%13s", "256")+String.format("%13s", "512");
+			System.out.println(String.format("%140s\n", " ").replace(" ", "_"));
+			System.out.println(header);
+			System.out.println(String.format("%140s\n", " ").replace(" ", "_"));
+			while(size <= 2048){
 				
 				size *= 2;
 				
@@ -238,33 +234,44 @@ public class AlgoTest {
 					}
 				}
 				
+				String readings = String.format("%10d units", size);
 				long nanos = System.currentTimeMillis();
-				//C = traditionalMatrixMultiplication(A, B);
-				long t1 = System.currentTimeMillis() - nanos;
+				if(size <= 1024){
+					C = traditionalMatrixMultiplication(A, B);
+					long t1 = System.currentTimeMillis() - nanos;
+					String tradTime = String.format("%10d ms", t1);
+					readings += tradTime;
+				}else{
+					String tradTime = String.format("%10s   ", "NA");
+					readings += tradTime;
+				}
 				
-				nanos = System.currentTimeMillis();
+				
+				int assumedBreakPoint = 16; 
+				
 				int requiredLength = getRequiredLengthFor(A.length);
 				if(requiredLength > A.length){
 					A = paddMatrix(A, requiredLength);
 					B = paddMatrix(B, requiredLength);
 				}
-				C = strassenForMatrix(A, B, size);
-				long t2 = System.currentTimeMillis() - nanos;
 				
-//				if(checkForBreakPoint(t1,t2,size)){
-//					found = true;
-//				}
-//				
-//				if(t1 > t2){
-//					//found = true;
-//				}
+				while(assumedBreakPoint < 1024){
+					if(size > 2048 && (assumedBreakPoint == 16 || assumedBreakPoint == 512)){
+						String time = String.format("%10s   ", "NA");
+						readings += time;
+						assumedBreakPoint *= 2;
+						continue;
+					}
+					nanos = System.currentTimeMillis();
+					C = strassenForMatrix(A, B, size, assumedBreakPoint);
+					long t2 = System.currentTimeMillis() - nanos;
+					String time = String.format("%10d ms", t2);
+					readings += time;
+					assumedBreakPoint *= 2;
+				}
 				
-				System.out.println("_________________\nat: "+size+"\ntime by traditional method: "+t1+"ms\ntime by Strassen's Algorithm: "+t2+"ms");
+				System.out.println(readings);
 			}
-//			bpQueue.add(size);
-//			Arrays.fill(timeLead, 0);
-			assumedBreakPoint *= 2;
-		}
 		
 		int breakPoint = 0;
 
