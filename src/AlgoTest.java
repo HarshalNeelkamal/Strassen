@@ -236,7 +236,7 @@ public class AlgoTest {
 				
 				String readings = String.format("%10d units", size);
 				long nanos = System.currentTimeMillis();
-				if(size <= 1024){
+				if(size <= 2048){
 					C = traditionalMatrixMultiplication(A, B);
 					long t1 = System.currentTimeMillis() - nanos;
 					String tradTime = String.format("%10d ms", t1);
@@ -256,12 +256,12 @@ public class AlgoTest {
 				}
 				
 				while(assumedBreakPoint < 1024){
-					if(size > 2048 && (assumedBreakPoint == 16 || assumedBreakPoint == 512)){
-						String time = String.format("%10s   ", "NA");
-						readings += time;
-						assumedBreakPoint *= 2;
-						continue;
-					}
+//					if(size > 2048 && (assumedBreakPoint == 16 || assumedBreakPoint == 512)){
+//						String time = String.format("%10s   ", "NA");
+//						readings += time;
+//						assumedBreakPoint *= 2;
+//						continue;
+//					}
 					nanos = System.currentTimeMillis();
 					C = strassenForMatrix(A, B, size, assumedBreakPoint);
 					long t2 = System.currentTimeMillis() - nanos;
